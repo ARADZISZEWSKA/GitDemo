@@ -1,0 +1,256 @@
+--46. Wyświetlić wszystkie nazwiska klientów i ewentualnie nazwy miast i ulic, gdzie pierwsza litera ulicy jest równa pierwszej literze miasta.
+select k1.nazwisko,k2.miasto, k2.ulica from Klient k1 left join Klient k2	
+on k1.id_klienta=k2.id_klienta
+and LEFT(k2.ulica,1)=LEFT(k2.miasto,1)
+
+--47. Wyświetlić w jednej kolumnie miesiące, a w drugiej liczby transakcji przeprowadzonych w tym czasie.
+select datename(mm,data_transakcji) as 'Miesiąc transakcji',
+COUNT(*) as 'Liczba transakcji' 
+from Transakcje
+group by datename(mm,data_transakcji) 
+
+--48. Zakładając, że prowizja w 2021 roku wynosi 1,55%, wyświetlić wszystkie ceny uzyskane za domy bez tej prowizji, których sprzedaż miała miejsce w 2021 roku.
+select cena_uzyskana*0.9845 as 'cena uzyskana bez prowizji' from Transakcje
+where YEAR(data_transakcji)=2022
+
+--49. Wyświetlić wszystkie 5 literowe nazwiska, których 1 litera jest równa 3 literze.
+select * from Klient where len(nazwisko)=5
+and left(nazwisko,1)=substring(nazwisko,3,1)
+
+--50. Wyświetlić nazwiska trzech klientów, którzy przeprowadzili jakiekolwiek transakcje zakupu domu jako pierwsi.
+select  top 3 nazwisko,imie from Transakcje, Klient
+where Klient.id_klienta=Transakcje.id_klienta
+order by data_transakcji asc
+
+
+--51. Wyświetlić wszystkie identyfikatory domów oraz ewentualnie ich miasta w przypadku, gdy cena proponowana metra kwadratowego przekracza 5000 zł.
+select d.id_domu, d1.miasto, d1.cena_proponowana from Dom d
+left join Dom d1
+on d.id_domu=d1.id_domu
+and (d1.cena_proponowana/d1.metraz)>5000
+
+--52. Wyświetlić nazwiska kończące się na „ski” dla wszystkich klientów, którzy kupili co najmniej 1 dom.
+
+
+select k.nazwisko from Klient k, Transakcje t
+where k.id_klienta=t.id_klienta
+and k.nazwisko like '%ski'
+
+
+--53. Zwiększyć cenę proponowaną domów o 5%. / na stałe
+update Dom set cena_proponowana*=1.05 -- cena_proponowana=cena_proponowana*1.05
+
+
+--54. Obniżyć cenę proponowaną domu o najwyższej cenie o 5000 zł.
+update Dom set cena_proponowana-=5000
+where cena_proponowana=
+(select  MAX(cena_proponowana)  from Dom)
+
+
+--55. Obniżyć o 10% ceny wszystkich niesprzedanych domów.
+update Dom set cena_proponowana*=0.9
+where id_domu not in 
+(select id_domu from Transakcje)
+
+
+
+--56. Usunąć wszystkich klientów, których nazwiska zaczynają się na literę „A”.
+-- delete - usuwa wiersze
+delete from Klient where nazwisko like 'A%'
+
+--57. Usunąć z oferty wszystkie domy, które nie zostały sprzedane.
+delete from Dom 
+where id_domu not in 
+(select id_domu from Transakcje)
+
+--58. Utworzyć widok dla wszystkich klientów, którzy nie nabyli jeszcze domu.
+go -- żeby sie nie podkreślało/ bo mamy kolejne create
+create view zadanie58 as
+select * from Klient
+where id_klienta not in
+(select id_klienta from Transakcje)
+
+--59. Zwiększyć identyfikatory klientów, którzy nie nabyli domu o 100.
+update zadanie58 set id_klienta+=100
+select * from zadanie58
+
+--60. Dodać dwa nowe domy.
+select * from Dom
+insert into Dom (id_domu, miasto, ulica) values
+(6, 'Sopot', 'Nowa 10')
+
+
+
+
+
+
+
+
+16.12.2022
+
+create table cdk (room_number numeric(5) primary key, capacity numeric(3), room_type varchar(30));
+
+go
+
+insert into cdk values (2, 100, 'lecture room');
+
+insert into cdk values (3, 30, 'lecture room');
+
+insert into cdk values (4, 120, 'lecture room');
+
+insert into cdk values (5, 30, 'lecture room');
+
+insert into cdk values (6, 30, 'lecture room');
+
+insert into cdk values (7, 30, 'lecture room');
+
+insert into cdk values (9, 400, 'auditorium');
+
+insert into cdk values (23, 13, 'computer laboratory');
+
+insert into cdk values (24, 29, 'computer laboratory');
+
+insert into cdk values (25, 29, 'computer laboratory');
+
+insert into cdk values (34, 10, 'media room');
+
+insert into cdk values (36, 31, 'computer laboratory');
+go
+
+create table wz (room_number numeric(5) primary key, capacity numeric(3), room_type varchar(30));
+
+go
+
+insert into wz values (307, 70, 'lecture room');
+
+insert into wz values (310, 30, 'lecture room');
+
+insert into wz values (311, 30, 'lecture room');
+
+insert into wz values (1, 200, 'auditorium');
+
+insert into wz values (23, 13, 'computer laboratory');
+
+insert into wz values (119, 29, 'computer laboratory');
+
+insert into wz values (118, 29, 'computer laboratory');
+
+insert into wz values (238, 31, 'computer laboratory');
+
+go
+
+ 
+
+CREATE TABLE building (
+
+   id numeric(5) identity(1,1) primary key,
+
+   name varchar(100) not null,
+
+   city varchar(100),
+
+   address varchar(100),
+
+   floor_number numeric(1) ,
+
+   room_number numeric(5) FOREIGN KEY (room_number) REFERENCES cdk(room_number));
+
+   go
+
+ insert into building(name,city,address,floor_number,room_number)  values ('CDK WZ UG','Sopot','Piaskowa 9',0,4)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',0,5)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',0,6)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',0,7)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',0,9)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',1,23)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',1,24)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',1,25)
+
+ insert into building(name,city,address,floor_number,room_number) values ('CDK WZ UG','Sopot','Piaskowa 9',1,36)
+ 
+ select  * from cdk
+
+ --zmienić w typie pokoju computer laboratory na laboratory
+
+ update cdk set room_type='laboratory'
+ where room_type='computer laboratory'
+
+ update wz set room_type='laboratory'
+  where room_type='computer laboratory'
+
+  select distinct room_type from wz
+  select distinct room_type from cdk
+
+  select * from wz
+
+  insert into wz values (2,40,'laboratory')
+
+  select * from building
+
+
+--  1. Wyświetl nazwy wszystkich budynków (new_name) i liczbę miejsc w sali (capacity), dla sal które mają więcej 
+--niż 20 miejsc siedzących (capacity) i są położone na pierwszym piętrze (floor).
+--dwie tabele buiding i cdk
+select b.name as new_name, c.capacity as 'Capacity' -- nie musimy b,c bo nazwy są jednoznaczne
+from building b, cdk c
+where b.room_number=c.room_number
+and c.capacity>20
+and b.floor_number=1
+
+--2. Utwórz zapytanie z wykorzystaniem instrukcji CASE, które wyświetli numer sali (room number), 
+--liczbę miejsc w sali (number of seats) i pojemność podzieloną na trzy kategorie:
+--- więcej niż 100 studentów (capacity>100)
+
+--- 50-100 studentów (capacity od 50 do 100)
+
+--- mniej niż 50 studentów (capacity<50)
+
+--Dla wszystkich sal z budynku CDK.
+
+select room_number as 'room number',capacity as 'number of seats',
+case 
+when
+capacity>100 then 'więcej niż 100 studentów'
+when capacity between 50 and 100 then '50-100 stud.' -- between włacznie z 50 i 100
+when capacity<50 then 'mniej niz 50 stud.'
+end as 'capacity of the room'
+from cdk
+
+--3. Wyświetl wszystkie rodzaje sal poprzez wyświetlenie jedynie trzech pierwszych liter kategorii sali tj.: lab, aud, lec (room_type) które znajdują się na pierwszym piętrze.
+select distinct left (room_type,3) as room_type
+-- lub substring(room_type,1,3)
+from cdk , building 
+where cdk.room_number=building.room_number
+and floor_number=1
+
+--4. Wyświetl wszystkie numery sal w budynku CDK – jeżeli numer sali w tabeli CDK jest taki sam jak w tabel WZ  - wyświetl dodatkowo wszystkie informacje z tabeli WZ. 
+select c.room_number,
+isnull(cast(w.capacity as varchar(3)),'') as capacity,
+isnull (w.room_type,'-') as room_type
+from cdk c left join wz w
+on c.room_number=w.room_number
+
+--sam join - iloczyn kartezjanski
+
+
+--5.  Wyświetl wszystkie numery sal w budynku WZ – jeżeli numer sali w tabeli WZ jest taki sam jak w tabel CDK  - wyświetl dodatkowo wszystkie informacje z tabeli CDK.
+select w.room_number, c.*
+from wz w left join cdk c
+on w.room_number=c.room_number
+
+--6. Jaki jest błąd w poniższym przykładzie i jak go naprawić? 
+
+select b.room_number, room_type, address, city
+
+from building b, cdk c
+
+where b.room_number=c.room_number
+
+
